@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyShop App</title>
+<style>
+/* === Global Style === */
+*{box-sizing:border-box;margin:0;padding:0;}
+body {
+  margin:0;
+  font-family:Arial,Khmer OS Battambang;
+ background: linear-gradient(to bottom right, #daf6f6e4);
+}
+
+
+
+a{text-decoration:none;color:#02719d;}
+button{cursor:pointer;transition:0.3s;outline:none;}
+
+/* === Header === */
+header{
+  background:linear-gradient(90deg,#02719d,#0196c7);
+  color:white;display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;position:sticky;top:0;z-index:1000;
+  box-shadow:0 2px 10px rgba(0,0,0,0.15);
+}
+header .logo{font-size:20px;font-weight:bold;cursor:pointer;}
+.search-bar{flex:1;margin:0 10px;}
+.search-bar input{
+  width:100%;padding:8px 14px;border:none;border-radius:25px;font-size:14px;
+}
+.user-actions{display:flex;align-items:center;gap:10px;}
+.user-actions button{
+  background:white;color:#02719d;border:none;border-radius:25px;
+  padding:8px 16px;font-weight:bold;
+}
+.user-actions button:hover{background:#f0f0f0;}
+.cart-icon{position:relative;font-size:22px;cursor:pointer;}
+.cart-count{
+  position:absolute;top:-10px;right:-10px;
+  background:red;color:white;border-radius:50%;
+  padding:2px 6px;font-size:12px;font-weight:bold;
+}
+
+/* === Filter Bar === */
+.filter-bar{
+  background:#e0f7ff;display:flex;gap:10px;overflow-x:auto;
+  padding:10px 15px;scrollbar-width:none;
+}
+.filter-bar::-webkit-scrollbar{display:none;}
+.filter-bar button{
+  padding:6px 14px;border:none;border-radius:25px;background:#02719d;color:white;
+  white-space:nowrap;font-size:13px;
+}
+.filter-bar button.active,.filter-bar button:hover{background:#005f8d;}
+
+/* === Product Grid === */
+.grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+  gap:15px;padding:15px;
+}
+.card{
+  background:white;border-radius:10px;overflow:hidden;
+  box-shadow:0 4px 10px rgba(0,0,0,0.1);transition:0.3s;
+}
+.card:hover{transform:scale(1.03);}
+.img-container{height:160px;overflow:hidden;}
+.img-container img{width:100%;height:100%;object-fit:cover;transition:0.3s;}
+.img-container:hover img{transform:scale(1.1);}
+.card-body{padding:10px;}
+.card-body h3{font-size:14px;height:36px;overflow:hidden;}
+.price{color:#e63946;font-weight:bold;}
+.buy-btn{
+  width:100%;margin-top:8px;padding:8px;border:none;border-radius:6px;
+  background:#02719d;color:white;font-weight:bold;
+}
+.buy-btn:hover{background:#005f8d;}
+
+/* === Modal Base === */
+.modal{
+  display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,0.6);justify-content:center;align-items:center;z-index:999;
+  animation:fadeIn 0.3s;
+}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+.modal-content{
+  background:white;border-radius:15px;padding:20px;width:90%;max-width:400px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.3);position:relative;
+}
+.close{position:absolute;right:15px;top:10px;font-size:20px;cursor:pointer;}
+
+/* === Auth Modal === */
+#authModal input{
+  width:100%;padding:10px;margin:8px 0;border:1px solid #ccc;border-radius:6px;
+}
+#authModal button{
+  width:100%;padding:10px;margin-top:8px;background:#02719d;border:none;
+  border-radius:6px;color:white;font-weight:bold;
+}
+#authModal button:hover{background:#005f8d;}
+.google-btn{
+  background:#fff;border:1px solid #ccc;color:#333;display:flex;
+  align-items:center;justify-content:center;gap:6px;font-weight:bold;
+}
+.google-btn img{width:20px;}
+
+/* === Cart Modal === */
+.cart-item{display:flex;align-items:center;gap:10px;margin:10px 0;}
+.cart-item img{width:50px;height:50px;object-fit:cover;border-radius:6px;}
+.cart-item input{width:50px;text-align:center;border:1px solid #ccc;border-radius:6px;}
+.cart-total{text-align:right;font-weight:bold;margin-top:10px;}
+
+/* === Checkout Page === */
+#checkoutPage{
+  display:none;padding:20px;
+}
+.checkout-card{
+  background:white;border-radius:10px;padding:15px;
+  max-width:400px;margin:auto;box-shadow:0 4px 15px rgba(0,0,0,0.15);
+}
+.checkout-card h3{text-align:center;margin-bottom:10px;}
+.checkout-item{display:flex;justify-content:space-between;margin:6px 0;}
+.checkout-total{text-align:right;font-weight:bold;margin-top:15px;}
+.confirm-btn{
+  width:100%;margin-top:15px;padding:10px;background:#02719d;color:white;
+  border:none;border-radius:8px;font-weight:bold;
+}
+.confirm-btn:hover{background:#005f8d;}
+.back-btn{
+  margin-top:10px;width:100%;padding:8px;background:#ccc;border:none;border-radius:8px;
+}
+.checkout-card input, .checkout-card textarea{
+  width:100%;padding:8px;margin-top:8px;border:1px solid #ccc;border-radius:6px;
+}
+
+/* === Customer Page / Order History === */
+#customerPage{display:none;padding:20px;}
+.profile-card{
+  background:white;border-radius:10px;padding:15px;
+  max-width:400px;margin:auto;box-shadow:0 4px 15px rgba(0,0,0,0.15);margin-bottom:20px;
+}
+.profile-card h3{text-align:center;margin-bottom:10px;}
+.profile-item{margin:6px 0;}
+.profile-item input, .profile-item textarea{
+  width:100%;padding:8px;border:1px solid #ccc;border-radius:6px;margin-top:4px;
+}
+.order-card{
+  background:white;border-radius:10px;padding:10px;margin-bottom:10px;
+  box-shadow:0 2px 10px rgba(0,0,0,0.1);
+}
+.order-item{display:flex;justify-content:space-between;margin:4px 0;}
+.order-total{text-align:right;font-weight:bold;margin-top:5px;}
+.logout-btn{
+  width:100%;padding:8px;background:#e63946;color:white;border:none;border-radius:6px;font-weight:bold;
+}
+.logout-btn:hover{background:#c92b2b;}
+.hidden { display: none; }
+
+#productView {
+  padding: 20px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  max-width: 600px;
+  margin: 20px auto;
+}
+
+#productView img {
+  width: 100%;
+  border-radius: 12px;
+  margin-bottom: 10px;
+}
+
+#productView h2 {
+  font-size: 1.4em;
+  margin-bottom: 8px;
+}
+
+#productView .price-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.old-price {
+  text-decoration: line-through;
+  color: #888;
+}
+
+.new-price {
+  color: #e53935;
+  font-weight: bold;
+}
+
+.discount-label, .discount-badge {
+  background: #ff5252;
+  color: #fff;
+  font-size: 11px;
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+
+.promo {
+  color: #0288d1;
+  font-size: 12px;
+  margin-top: 3px;
+}
+
+
+#productView .desc {
+  font-size: 0.95em;
+  color: #706c6c;
+  margin: 10px 0 16px;
+}
+
+
+
+
+.buy-btn, .add-btn {
+  display: inline-block;
+  margin: 6px 4px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1em;
+}
+.buy-btn {   background:linear-gradient(90deg,#9e9e9e85,#0196c7); }
+.add-btn { background: #03578b; color: #fff; }
+.old-price {
+  text-decoration: line-through; /* Adds a line through the text */
+  color: #888; /* Optional: grey color */
+  margin-right: 8px; /* Space between old and new price */
+}
+
+.new-price {
+  color: #e53935; /* Optional: red color for discounted price */
+  font-weight: bold;
+}
+ .promo{color:#dc3545;font-size:12px;margin-bottom:10px;}
+.price{color:#888;font-weight:bold;font-size:18px;margin-bottom:5px;}
+.product-card {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  padding: 12px;
+  overflow: hidden;
+  transition: transform 0.2s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-4px);
+}
+
+/* ✅ Main image */
+.img-section {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  background:linear-gradient(90deg,#9e9e9e85,#0196c7);
+   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.main-img {
+  width:340px;
+  height: 340px;
+  object-fit: contain;
+  border-radius: 12px;
+  background: #fff;
+  transition: transform 0.3s ease;
+}
+
+.main-img:hover {
+  transform: scale(1.03);
+}
+
+/* ✅ រូបតូច (thumbnail) */
+.thumbs {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 1px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: all 0.2s ease;
+}
+
+
+
+
+.thumb.active {
+  border-color: #007bff;
+  transform: scale(1.05);
+}
+
+/* ✅ Responsive */
+@media (max-width: 1024px) {
+  .main-img { height: 300px; }
+}
+
+@media (max-width: 768px) {
+  .main-img { height: 240px; }
+  .thumb { width: 56px; height: 56px; }
+}
+
+@media (max-width: 480px) {
+  .main-img { height: auto; max-height: 220px; }
+  .thumb { width: 52px; height: 52px; }
+}
+
+
+
+
+.zoom-modal { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:9999; }
+.zoom-modal.hidden { display:none; }
+.zoom-overlay { position:absolute; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(4px); }
+.zoom-content { position:relative; max-width:90%; max-height:90%; display:flex; align-items:center; justify-content:center; transition:opacity 0.4s ease; }
+.zoom-content img { width:100%; height:auto; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.5); }
+.zoom-nav, .close-zoom { position:absolute; z-index:1010; background:rgba(255,255,255,0.85); border:none; border-radius:50%; font-size:1.8em; cursor:pointer; padding:6px 12px; box-shadow:0 2px 8px rgba(0,0,0,0.4); transition:opacity 0.4s ease; }
+.zoom-nav.prev { left:-50px; top:50%; transform:translateY(-50%); }
+.zoom-nav.next { right:-50px; top:50%; transform:translateY(-50%); }
+.close-zoom { top:-10px; right:-10px; font-size:1.2em; }
+@media(max-width:600px){ .zoom-nav.prev{left:10px;} .zoom-nav.next{right:10px;} }
+.hide-controls .zoom-nav,
+.hide-controls .close-zoom { opacity:0; pointer-events:none; }
+
+/* ===== Modal Background ===== */
+.modal {
+  display: none; 
+  position: fixed;
+  z-index: 1000; 
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  background-color: rgba(0,0,0,0.6); /* dark overlay */
+  animation: fadeIn 0.3s ease;
+}
+
+/* ===== Modal Content ===== */
+.modal-content {
+  background-color: #fff;
+  margin: 60px auto;
+  padding: 20px 25px;
+  border-radius: 12px;
+  max-width: 600px;
+  width: 90%;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+  animation: slideDown 0.3s ease;
+  font-family: "Arial", sans-serif;
+}
+
+/* ===== Close Button ===== */
+.modal .close {
+  color: #888;
+  float: right;
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.modal .close:hover {
+  color: #000;
+}
+
+/* ===== Table Style ===== */
+.modal-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 15px;
+}
+.modal-content table th, .modal-content table td {
+  padding: 8px 5px;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+}
+.modal-content table th {
+  background-color: #f8f8f8;
+  text-align: left;
+}
+.modal-content table td img {
+  border-radius: 6px;
+}
+
+/* ===== Footer Total ===== */
+.modal-content table tfoot td {
+  font-weight: bold;
+  font-size: 15px;
+  border-top: 2px solid #ccc;
+}
+
+/* ===== Input Fields ===== */
+.modal-content input[type="text"],
+.modal-content textarea {
+  width: 100%;
+  padding: 8px 10px;
+  margin-top: 5px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border 0.2s, box-shadow 0.2s;
+}
+.modal-content input[type="text"]:focus,
+.modal-content textarea:focus {
+  border-color: #4CAF50;
+  box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+  outline: none;
+}
+.close {
+  float:right;
+  font-size:24px;
+  cursor:pointer;
+  color:#999;
+}
+.close:hover { color:#000; }
+/* ===== Buttons ===== */
+.confirm-btn, .back-btn {
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  font-size: 15px;
+  cursor: pointer;
+  margin-right: 10px;
+  transition: 0.2s;
+}
+.confirm-btn {
+  background-color: #4CAF50;
+  color: white;
+}
+.confirm-btn:hover {
+  background-color: #45a049;
+}
+.back-btn {
+  background-color: #f1f1f1;
+  color: #333;
+}
+.back-btn:hover {
+  background-color: #ddd;
+}
+
+/* ===== Animations ===== */
+@keyframes fadeIn {
+  from {opacity:0;} to {opacity:1;}
+}
+@keyframes slideDown {
+  from {transform: translateY(-20px); opacity:0;} 
+  to {transform: translateY(0); opacity:1;}
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 480px) {
+  .modal-content table th, .modal-content table td {
+    font-size: 12px;
+    padding: 6px 3px;
+  }
+  .confirm-btn, .back-btn {
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+}
+
+
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo" onclick="goHome()">🛍 MyShop</div>
+  <div class="search-bar"><input id="searchInput" placeholder="Search products..."></div>
+  <div class="user-actions">
+    <div class="cart-icon" onclick="openCart()">🛒<span id="cartCount" class="cart-count">0</span></div>
+    <button id="loginBtn" onclick="openAuth()">Login</button>
+    <img id="profileAvatar" src="" alt="" style="width:32px;height:32px;border-radius:50%;display:none;cursor:pointer;" onclick="openCustomerPage()">
+  </div>
+</header>
+
+<div id="filterBar" class="filter-bar"></div>
+
+<main id="mainPage">
+  <h3 style="margin-left:15px;">Newest Products</h3>
+ 
+  <div id="productsGrid" class="grid"></div>
+<div id="productView" class="hidden"></div>
+
+
+</main>
+
+<!-- Checkout Page -->
+<section id="checkoutPage">
+  <div class="checkout-card">
+    <h3>Checkout</h3>
+    <div id="checkoutItems"></div>
+    <div class="checkout-total" id="checkoutTotal">Total: $0</div>
+    <input id="checkoutPhone" placeholder="Phone Number">
+    <textarea id="checkoutAddress" placeholder="Delivery Address"></textarea>
+    <button class="confirm-btn" onclick="confirmCheckout()">Confirm Purchase</button>
+    <button class="back-btn" onclick="goBack()">Back to Shop</button>
+  </div>
+</section>
+
+<!-- Customer Page -->
+<section id="customerPage">
+  <div class="profile-card">
+    <h3>Customer Profile</h3>
+    <div class="profile-item" id="profileName"></div>
+    <div class="profile-item" id="profileEmail"></div>
+    <div class="profile-item">
+      <label>Phone:</label>
+      <input id="profilePhone" placeholder="Phone Number">
+    </div>
+    <div class="profile-item">
+      <label>Address:</label>
+      <textarea id="profileAddress" placeholder="Delivery Address"></textarea>
+    </div>
+    <button class="confirm-btn" onclick="saveProfile()">Save Profile</button>
+    <button class="logout-btn" onclick="logoutUser()">Logout</button>
+  </div>
+  <h3 style="text-align:center;">Order History</h3>
+  <div id="orderHistory"></div>
+  <button class="back-btn" onclick="goHome()">Back to Shop</button>
+</section>
+
+<!-- Auth Modal -->
+<div id="authModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeAuth()">&times;</span>
+    <div id="loginForm">
+      <h3>Login</h3>
+      <input id="loginEmail" type="email" placeholder="Email">
+      <input id="loginPassword" type="password" placeholder="Password">
+      <button onclick="loginUser()">Login</button>
+      <button class="google-btn" onclick="loginWithGoogle()"><img src="https://www.svgrepo.com/show/475656/google-color.svg"> Login with Google</button>
+      <p>No account? <a href="#" onclick="switchToRegister()">Register</a></p>
+    </div>
+    <div id="registerForm" style="display:none;">
+      <h3>Register</h3>
+      <input id="regName" placeholder="Full Name">
+      <input id="regEmail" type="email" placeholder="Email">
+      <input id="regPassword" type="password" placeholder="Password">
+      <button onclick="registerUser()">Register</button>
+      <p>Already have account? <a href="#" onclick="switchToLogin()">Login</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- Cart Modal -->
+<div id="cartModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeCart()">&times;</span>
+    <h3>My Cart</h3>
+    <div id="cartItems"></div>
+    <div class="cart-total" id="cartTotal">Total: $0</div>
+    <button class="confirm-btn" onclick="openCheckout()">Buy Now</button>
+  </div>
+</div>
+<!-- Buy Now Modal -->
+<!-- Buy Now Modal -->
+<div id="buyModal" class="modal" style="display:none;">
+  <div class="modal-content" style="max-width:600px;">
+    <span class="close" onclick="closeCart()">&times;</span>
+    <h2 id="buyProductName" style="text-align:center;margin-bottom:15px;color:#222;">sss</h2>
+
+    <table style="width:100%;margin-bottom:15px;border-collapse:collapse;">
+      <thead style="background:#f8f8f8;">
+        <tr style="border-bottom:1px solid #ddd;">
+          <th style="padding:8px;">Image</th>
+          <th style="padding:8px;">Product</th>
+          <th style="padding:8px;">Qty</th>
+          <th style="padding:8px;">Price</th>
+          <th style="padding:8px;">Total</th>
+        </tr>
+      </thead>
+      <tbody id="buyInvoiceBody"></tbody>
+      <tfoot style="border-top:2px solid #ccc;">
+        <tr>
+          <td colspan="4" style="text-align:right;font-weight:bold;">តម្លៃដើម:</td>
+          <td id="buyInvoiceSubtotal" style="text-align:right;font-weight:bold;">$0.00</td>
+        </tr>
+        <tr>
+          <td colspan="4" style="text-align:right;font-weight:bold;">ចំនួនបញ្ចុះតម្លៃ:</td>
+          <td id="buyInvoiceDiscount" style="text-align:right;font-weight:bold;color:red;">-$0.00</td>
+          
+        </tr>
+        <tr>
+          <td colspan="4" style="text-align:right;font-weight:bold;">តម្លៃដឹកជញ្ជូន(8000៛):</td>
+          <td id="buyInvoiceShipping" style="text-align:right;font-weight:bold;">$0.00</td>
+        </tr>
+        <tr>
+          <td colspan="4" style="text-align:right;font-weight:bold;font-size:1.1em;">Total:</td>
+          <td id="buyInvoiceTotal" style="text-align:right;font-weight:bold;font-size:1.1em;color:#28a745;">$0.00</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <!-- User Info -->
+    <div style="margin-bottom:10px;">
+      <input type="text" id="buyPhone" placeholder="Enter phone number" 
+        style="width:100%;padding:8px;border-radius:6px;border:1px solid #ccc;">
+    </div>
+
+    <div style="margin-bottom:10px;">
+      <textarea id="buyAddress" placeholder="Enter your address" 
+        style="width:100%;padding:8px;border-radius:6px;border:1px solid #ccc;min-height:70px;"></textarea>
+    </div>
+
+    <div id="paymentOption" style="margin-bottom:15px;text-align:center;color:#555;">
+      <small>Payment method will be selected automatically based on your location.</small>
+    </div>
+
+    <div style="text-align:center;">
+      <button class="confirm-btn" onclick="buyNowConfirm()" 
+        style="padding:10px 20px;border:none;background:#28a745;color:#fff;border-radius:6px;cursor:pointer;font-size:16px;margin-right:8px;">
+        Confirm Purchase
+      </button>
+      <button class="back-btn" onclick="closeBuyModal()" 
+        style="padding:10px 20px;border:none;background:#ccc;color:#333;border-radius:6px;cursor:pointer;">
+        Cancel
+      </button>
+    </div>
+  </div>
+<!-- Toast Notification -->
+<div id="toast" style="
+  position:fixed;
+  top:20px;
+  right:20px;
+  background:#4caf50;
+  color:white;
+  padding:10px 20px;
+  border-radius:8px;
+  display:none;
+  box-shadow:0 2px 6px rgba(0,0,0,0.3);
+  z-index:9999;
+  font-size:15px;
+"></div>
+
+
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
+<script>
+// === Firebase Config ===
+const firebaseConfig = {apiKey:"AIzaSyAQMzAH4MJMojdHWAiLkYBSjdMJWS3Kccw",authDomain:"prewedding-f511a.firebaseapp.com",projectId:"prewedding-f511a",storageBucket:"prewedding-f511a.appspot.com",messagingSenderId:"1057725115554",appId:"1:1057725115554:web:4e8a48eaf959cbd9a07bfb"};
+firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth(); const db=firebase.firestore();
+
+// === Elements ===
+const productsGrid=document.getElementById("productsGrid");
+
+const filterBar=document.getElementById("filterBar");
+const cartCount=document.getElementById("cartCount");
+const cartModal=document.getElementById("cartModal");
+const authModal=document.getElementById("authModal");
+const mainPage=document.getElementById("mainPage");
+const checkoutPage=document.getElementById("checkoutPage");
+const customerPage=document.getElementById("customerPage");
+const orderHistory=document.getElementById("orderHistory");
+
+// === Auth Modal ===
+function openAuth(){authModal.style.display='flex';}
+function closeAuth(){authModal.style.display='none';}
+function switchToLogin(){document.getElementById('loginForm').style.display='block';document.getElementById('registerForm').style.display='none';}
+function switchToRegister(){document.getElementById('loginForm').style.display='none';document.getElementById('registerForm').style.display='block';}
+
+// === Register / Login ===
+function registerUser(){
+  const name=regName.value, email=regEmail.value, pass=regPassword.value;
+  if(!name||!email||!pass) return alert("Please fill all fields!");
+  auth.createUserWithEmailAndPassword(email,pass)
+  .then(cred=>{db.collection('users').doc(cred.user.uid).set({name,email,createdAt:firebase.firestore.FieldValue.serverTimestamp()});closeAuth();})
+  .catch(e=>alert(e.message));
+}
+function loginUser(){
+  const email=loginEmail.value, pass=loginPassword.value;
+  auth.signInWithEmailAndPassword(email,pass).then(()=>closeAuth()).catch(e=>alert(e.message));
+}
+function loginWithGoogle(){
+  const provider=new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).then(result=>{
+    const u=result.user;
+    const userRef=db.collection('users').doc(u.uid);
+    userRef.get().then(doc=>{if(!doc.exists) userRef.set({name:u.displayName||"No Name",email:u.email,createdAt:firebase.firestore.FieldValue.serverTimestamp()});});
+    closeAuth();
+  }).catch(e=>alert(e.message));
+}
+
+// === Profile / Customer Page ===
+const profileAvatar=document.getElementById("profileAvatar");
+
+function updateProfileUI(){
+  const u=auth.currentUser;
+  if(u){profileAvatar.src=u.photoURL||"https://www.gravatar.com/avatar/"+CryptoJS.MD5(u.email.trim().toLowerCase());profileAvatar.style.display='block';document.getElementById('loginBtn').style.display='none';}
+  else{profileAvatar.style.display='none';document.getElementById('loginBtn').style.display='block';}
+}
+function openCustomerPage(){
+  const u=auth.currentUser;
+  if(!u){alert("Please login first!"); openAuth(); return;}
+  mainPage.style.display='none'; checkoutPage.style.display='none'; customerPage.style.display='block';
+  db.collection('users').doc(u.uid).get().then(doc=>{
+    const data=doc.data()||{};
+    document.getElementById('profileName').textContent="Name: "+(data.name||"");
+    document.getElementById('profileEmail').textContent="Email: "+(data.email||"");
+    document.getElementById('profilePhone').value=data.phone||"";
+    document.getElementById('profileAddress').value=data.address||"";
+  });
+  loadOrderHistory(u.uid);
+}
+function saveProfile(){
+  const u=auth.currentUser; if(!u) return alert("Please login first!");
+  const phone=document.getElementById('profilePhone').value.trim();
+  const address=document.getElementById('profileAddress').value.trim();
+  db.collection('users').doc(u.uid).update({phone,address}).then(()=>alert("✅ Profile updated!")).catch(e=>alert(e.message));
+}
+
+// === Logout ===
+function logoutUser(){auth.signOut().then(()=>{goHome();});}
+
+// === Go Home ===
+function goHome(){mainPage.style.display='block'; checkoutPage.style.display='none'; customerPage.style.display='none';}
+
+// === Cart Functions ===
+function getCart(){return JSON.parse(localStorage.getItem('cart_'+(auth.currentUser?.uid||'guest'))||'[]');}
+function setCart(c){localStorage.setItem('cart_'+(auth.currentUser?.uid||'guest'),JSON.stringify(c));updateCartCount();}
+function updateCartCount(){cartCount.textContent=getCart().reduce((s,i)=>s+i.qty,0);}
+function openCart(){const u=auth.currentUser; if(!u){alert("Please login first!");openAuth();return;} renderCart();cartModal.style.display='flex';}
+function closeCart(){cartModal.style.display='none';}
+function renderCart(){const c=getCart();cartItems.innerHTML='';let total=0;c.forEach(i=>{total+=i.price*i.qty;const div=document.createElement('div');div.className='cart-item';div.innerHTML=`<img src="${i.image}"><div>${i.name}</div><input type="number" value="${i.qty}" min="1"><div>$${(i.price*i.qty).toFixed(2)}</div>`;div.querySelector('input').addEventListener('change',()=>{i.qty=Number(div.querySelector('input').value);setCart(c);renderCart();});cartItems.appendChild(div);});document.getElementById('cartTotal').textContent="Total: $"+total.toFixed(2);}
+
+// === Checkout ===
+function openCheckout(){
+  const u=auth.currentUser; if(!u){alert("Please login first!"); openAuth(); return;}
+  closeCart(); mainPage.style.display='none'; checkoutPage.style.display='block';
+  const cart=getCart(); const div=document.getElementById('checkoutItems'); div.innerHTML=''; let total=0;
+  cart.forEach(i=>{total+=i.price*i.qty; div.innerHTML+=`<div class='checkout-item'><span>${i.name} x${i.qty}</span><span>$${(i.price*i.qty).toFixed(2)}</span></div>`;});
+  document.getElementById('checkoutTotal').textContent="Total: $"+total.toFixed(2);
+  db.collection('users').doc(u.uid).get().then(doc=>{const data=doc.data()||{}; document.getElementById('checkoutPhone').value=data.phone||''; document.getElementById('checkoutAddress').value=data.address||'';});
+}
+function confirmCheckout(){
+  const u=auth.currentUser; if(!u) return alert("Please login first!");
+  const cart=getCart(); if(cart.length===0) return alert("Cart is empty!");
+  const phone=document.getElementById('checkoutPhone').value.trim();
+  const address=document.getElementById('checkoutAddress').value.trim();
+  if(!phone||!address) return alert("Please enter phone and delivery address!");
+  db.collection('users').doc(u.uid).get().then(userDoc=>{
+    const userData=userDoc.data()||{};
+    const order={customer:{uid:u.uid,name:userData.name||u.displayName||"Unknown",email:u.email||userData.email||"",phone,address},products:cart,total:cart.reduce((s,i)=>s+i.price*i.qty,0),createdAt:firebase.firestore.FieldValue.serverTimestamp()};
+    db.collection('orders').doc(u.uid).collection('orders').doc().set(order).then(()=>{alert("✅ Purchase Confirmed!"); setCart([]); goHome();}).catch(e=>alert(e.message));
+  });
+}
+function goBack(){checkoutPage.style.display='none'; mainPage.style.display='block'; updateCartCount();}
+
+// === Load Order History ===
+function loadOrderHistory(uid){
+  orderHistory.innerHTML='Loading...';
+  db.collection('orders').doc(uid).collection('orders').orderBy('createdAt','desc').get().then(snap=>{
+    orderHistory.innerHTML=''; if(snap.empty){orderHistory.textContent="No orders yet.";}
+    snap.forEach(doc=>{const o=doc.data(); const div=document.createElement('div');div.className='order-card';
+      o.products.forEach(p=>{div.innerHTML+=`<div class='order-item'><span>${p.name} x${p.qty}</span><span>$${(p.price*p.qty).toFixed(2)}</span></div>`;});
+      div.innerHTML+=`<div class='order-total'>Total: $${o.total.toFixed(2)}</div>`;
+      div.innerHTML+=`<div style='font-size:12px;color:#555;text-align:right;'>${o.createdAt.toDate().toLocaleString()}</div>`;
+      orderHistory.appendChild(div);
+    });
+  });
+}
+
+// === Products ===
+let products=[];
+function loadProducts(){
+  db.collection("products").get().then(s=>{products=s.docs.map(d=>({id:d.id,...d.data()})); renderFilters(); renderProducts();});
+}
+function renderFilters(){
+  const types=[...new Set(products.map(p=>p.type).filter(Boolean))];
+  filterBar.innerHTML=''; const allBtn=document.createElement('button'); allBtn.textContent='All'; allBtn.classList.add('active');
+  allBtn.onclick=()=>{document.querySelectorAll('.filter-bar button').forEach(b=>b.classList.remove('active'));allBtn.classList.add('active'); renderProducts('');};
+  filterBar.appendChild(allBtn);
+  types.forEach(t=>{const b=document.createElement('button'); b.textContent=t; b.onclick=()=>{document.querySelectorAll('.filter-bar button').forEach(bb=>bb.classList.remove('active'));b.classList.add('active'); renderProducts(t);}; filterBar.appendChild(b);});
+}
+
+
+
+
+
+// =======================
+// Render Products
+// =======================
+function renderProducts(f = '') {
+  const q = searchInput.value.toLowerCase();
+  productsGrid.innerHTML = '';
+  productView.classList.add('hidden');
+  productsGrid.classList.remove('hidden');
+
+  let list = products.filter(p =>
+    (!f || p.type === f) &&
+    (!q || p.name.toLowerCase().includes(q))
+  );
+
+  list.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+
+  if (list.length === 0) {
+    productsGrid.innerHTML = "<p style='text-align:center;padding:20px;'>មិនមានទំនិញ</p>";
+    return;
+  }
+
+  list.forEach(p => {
+    const c = document.createElement('div');
+    c.className = 'card';
+
+    const img = Array.isArray(p.imageURL) ? p.imageURL[0] : p.imageURL || '';
+    const views = typeof p.views === 'number' ? p.views : 0;
+    const price = typeof p.price === 'number' ? p.price : 0;
+
+    // ✅ គណនាភាគរយបញ្ចុះ និងតម្លៃចុងក្រោយ
+    let discountPercent = 0;
+    if (p.discount && !isNaN(p.discount)) {
+      discountPercent = parseFloat(p.discount);
+    } else if (p.discountPrice && price) {
+      discountPercent = Math.round((1 - p.discountPrice / price) * 100);
+    }
+
+    const hasDiscount = discountPercent > 0;
+    const finalPrice = hasDiscount
+      ? ((price * (1 - discountPercent / 100)) || 0).toFixed(2)
+      : (price || 0).toFixed(2);
+
+    // ✅ HTML សម្រាប់បង្ហាញតម្លៃ
+    const priceHTML = hasDiscount
+      ? `
+        <span class='old-price'>$${price}</span>
+        <span class='new-price'>$${finalPrice}</span>
+        <span class='discount-label'>-${discountPercent}%</span>
+      `
+      : `<span class='new-price'>$${price}</span>`;
+
+    const viewsText = views >= 1000
+      ? ((views / 1000) || 0).toFixed(1) + 'k'
+      : views;
+
+    c.innerHTML = `
+      <div class='img-container'>
+        <img src='${img}' alt='${p.name}' class='main-card-img'>
+        ${hasDiscount ? `<span class='discount-badge'>-${discountPercent}%</span>` : ''}
+      </div>
+      
+      <div class='card-body'>
+        <h3>${p.name}</h3>
+        <div class='meta'>
+          <span class='views'>👁 ${viewsText} views</span>
+        </div>
+        <div class='price-box'>${priceHTML}</div>
+      </div>
+    `;
+
+    // Click entire card → product view
+    c.onclick = () => showProductView(p);
+
+    productsGrid.appendChild(c);  
+  });
+}
+
+// =======================
+// Show Product View
+// =======================
+async function showProductView(p) {
+  productsGrid.classList.add('hidden');
+  productView.classList.remove('hidden');
+
+  const images = Array.isArray(p.imageURL) ? p.imageURL.slice(0, 5) : [p.imageURL];
+  const mainImg = images[0] || '';
+  const views = p.views || 0;
+
+  // Price calculation
+  let discountPercent = 0;
+  let finalPrice = p.price || 0;
+  if (p.discountPrice && p.discountPrice < p.price) {
+    discountPercent = Math.round((1 - p.discountPrice / p.price) * 100);
+    finalPrice = p.discountPrice;
+  } else if (p.discount && p.discount > 0) {
+    discountPercent = parseFloat(p.discount);
+    finalPrice = p.price * (1 - discountPercent / 100);
+  }
+  const hasDiscount = discountPercent > 0;
+  finalPrice = (finalPrice || 0).toFixed(2);
+
+  // Render product HTML
+  productView.innerHTML = `
+    <div class="img-section">
+      <img src="${mainImg}" alt="${p.name}" class="main-img" id="mainImage">
+      <div class="thumbs">
+        ${images.map((url,i)=>`<img src="${url}" class="thumb ${i===0?'active':''}">`).join('')}
+      </div>
+    </div>
+    <h2>${p.name}</h2>
+    <div class="price-box">
+      ${hasDiscount
+        ? `<span class="old-price">$${p.price}</span>
+           <span class="new-price">$${finalPrice}</span>
+           <span class="discount-label">-${discountPercent}%</span>`
+        : `<span class="new-price">$${p.price}</span>`
+      }
+    </div>
+    <div class="meta">👁 ${views} views</div>
+    <div class="desc" style=" font-size:0.95em; color:#706c6c; margin:10px 0 16px; max-height:120px; overflow-y:auto; word-wrap:break-word; white-space:normal; padding-right:4px;">${p.description || 'មិនមានពណ៌នា'}</div>
+    <div class="action-btns">
+      <button class="add-btn">🛒 Add to Cart</button>
+      <button class="buy-btn">⚡ Buy Now</button>
+    </div>
+  `;
+
+  // Change main image
+  const mainImageEl = document.getElementById('mainImage');
+  const thumbs = document.querySelectorAll('.thumb');
+  window.changeMainImage = (url, el) => {
+    mainImageEl.src = url;
+    thumbs.forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+  };
+
+  // Update views
+  const user = auth.currentUser;
+  const viewerId = user ? user.uid : `guest-${getDeviceId()}`;
+  const viewedKey = `viewed_${p.id}_${viewerId}`;
+  try {
+    if (!localStorage.getItem(viewedKey)) {
+      localStorage.setItem(viewedKey, '1');
+      const ref = db.collection('products').doc(p.id);
+      await ref.update({
+        views: firebase.firestore.FieldValue.increment(1),
+      });
+    }
+  } catch(e) { console.warn('Storage blocked or update failed', e); }
+
+  // Zoom Modal (once)
+  if (!document.querySelector('.zoom-modal')) {
+    const zoomModal = document.createElement('div');
+    zoomModal.className = 'zoom-modal hidden';
+    zoomModal.innerHTML = `
+      <div class="zoom-overlay" onclick="closeZoom()"></div>
+      <div class="zoom-content" id="zoomContent">
+        <button class="zoom-nav prev" onclick="prevZoom()">❮</button>
+        <img id="zoomImage" src="">
+        <button class="zoom-nav next" onclick="nextZoom()">❯</button>
+        <button class="close-zoom" onclick="closeZoom()">×</button>
+      </div>
+    `;
+    document.body.appendChild(zoomModal);
+  }
+
+  let zoomIndex = 0;
+  let hideTimer = null;
+  let zoomImages = images;
+
+  // Open Zoom (current main image)
+  mainImageEl.onclick = () => {
+    const currentIndex = zoomImages.indexOf(mainImageEl.src);
+    openZoom(mainImageEl.src, currentIndex >= 0 ? currentIndex : 0);
+  };
+
+  window.openZoom = (src, index = 0) => {
+    zoomIndex = index;
+    document.getElementById('zoomImage').src = src;
+    document.querySelector('.zoom-modal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    showControlsTemporarily();
+  };
+
+  window.closeZoom = () => {
+    document.querySelector('.zoom-modal').classList.add('hidden');
+    document.body.style.overflow = '';
+  };
+
+  window.nextZoom = () => {
+    if (!zoomImages.length) return;
+    zoomIndex = (zoomIndex + 1) % zoomImages.length;
+    document.getElementById('zoomImage').src = zoomImages[zoomIndex];
+    showControlsTemporarily();
+  };
+  window.prevZoom = () => {
+    if (!zoomImages.length) return;
+    zoomIndex = (zoomIndex - 1 + zoomImages.length) % zoomImages.length;
+    document.getElementById('zoomImage').src = zoomImages[zoomIndex];
+    showControlsTemporarily();
+  };
+
+  function showControlsTemporarily() {
+    const zoomContent = document.getElementById('zoomContent');
+    zoomContent.classList.remove('hide-controls');
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(() => {
+      zoomContent.classList.add('hide-controls');
+    }, 5000);
+  }
+
+  ['mousemove','touchstart'].forEach(evt => {
+    document.addEventListener(evt, () => {
+      if (document.querySelector('.zoom-modal').classList.contains('hidden')) return;
+      showControlsTemporarily();
+    });
+  });
+
+  // Thumbnails: only change main image, not open zoom
+  thumbs.forEach((t, i) => {
+    t.onclick = () => {
+      changeMainImage(t.src, t);
+      zoomIndex = i;
+    };
+  });
+
+
+
+
+
+
+
+
+  // ✅ Add to cart
+  productView.querySelector('.add-btn').onclick = () => {
+    if (!auth.currentUser) return alert('សូមចូលគណនីមុន!');
+    let cart = getCart();
+    const price = finalPrice;
+    const idx = cart.findIndex(i => i.productId === p.id);
+    if (idx >= 0) cart[idx].qty++;
+    else cart.push({ productId: p.id, name: p.name, price, image: mainImg, qty: 1 });
+    setCart(cart);
+    alert('✅ បានរក្សាទុកក្នុងកញ្រក់');
+  };
+
+ 
+
+
+
+
+let currentBuyProduct = null;
+const SHIPPING_RIEL = 8000;
+const EXCHANGE_RATE = 4000; // 1$ = 4000៛
+
+// ====== Update Row Total ======
+function updateRowTotal(row, discount){
+  const input = row.querySelector('.qty-input');
+  const qty = parseInt(input.value) || 1;
+  const priceCell = row.children[3];
+  const totalCell = row.querySelector('.row-total');
+
+  const priceText = priceCell.textContent.replace('$','');
+  const price = parseFloat(priceText);
+  const total = price * qty;
+
+  totalCell.textContent = `$${total.toFixed(2)}`;
+  updateInvoiceSummary();
+}
+
+// ====== Update Summary ======
+function updateInvoiceSummary(){
+  const rows = document.querySelectorAll('#buyInvoiceBody tr');
+  let subtotal = 0;
+  let discount = 0;
+
+  rows.forEach(row=>{
+    const qty = parseInt(row.querySelector('.qty-input').value)||1;
+    const productName = currentBuyProduct.name;
+    const priceBefore = currentBuyProduct.price;
+    const dis = currentBuyProduct.discount||0;
+    const priceAfter = priceBefore * (1 - dis/100);
+    subtotal += priceBefore * qty;
+    discount += (priceBefore - priceAfter) * qty;
+  });
+
+  const shippingUSD = SHIPPING_RIEL / EXCHANGE_RATE;
+  const total = subtotal - discount + shippingUSD;
+
+  document.getElementById('buyInvoiceSubtotal').textContent = `$${subtotal.toFixed(2)}`;
+  document.getElementById('buyInvoiceDiscount').textContent = `-$${discount.toFixed(2)}`;
+  document.getElementById('buyInvoiceShipping').textContent = `$${shippingUSD.toFixed(2)}`;
+  document.getElementById('buyInvoiceTotal').textContent = `$${total.toFixed(2)}`;
+}
+
+// ====== Open Modal ======
+function openBuyModal(product){
+  const u = auth.currentUser;
+  if(!u){ 
+    alert("Please login first!"); 
+    openAuth(); 
+    return;
+  }
+
+  currentBuyProduct = product;
+  const buyModal = document.getElementById('buyModal');
+  buyModal.style.display = 'block';
+  document.getElementById('buyProductName').textContent = product.price;
+
+  const tbody = document.getElementById('buyInvoiceBody');
+  tbody.innerHTML = '';
+
+  const tr = document.createElement('tr');
+  const priceAfterDiscount = product.price * (1 - (product.discount||0)/100);
+
+  tr.innerHTML = `
+    <td><img src="${Array.isArray(product.imageURL)?product.imageURL[0]:product.imageURL||''}" style="width:50px;border-radius:6px;"></td>
+    <td>${product.name}${product.discount ? ` <small style="color:red">(${product.discount}% OFF)</small>` : ''}</td>
+    <td style="text-align:center">
+      <button class="qty-btn" data-delta="-1">-</button>
+      <input type="number" class="qty-input" value="${product.qty || 1}" min="1" style="width:40px;text-align:center;">
+      <button class="qty-btn" data-delta="1">+</button>
+    </td>
+    <td style="text-align:right">$${currentBuyProduct.price .toFixed(2)}</td>
+    <td class="row-total" style="text-align:right">$${currentBuyProduct.price .toFixed(2)}</td>
+  `;
+  tbody.appendChild(tr);
+
+  // Bind Qty buttons
+  tr.querySelectorAll('.qty-btn').forEach(btn=>{
+    btn.addEventListener('click', function(){
+      const delta = parseInt(this.dataset.delta);
+      const input = this.parentElement.querySelector('.qty-input');
+      let val = parseInt(input.value) || 1;
+      val += delta;
+      if(val < 1) val = 1;
+      input.value = val;
+      updateRowTotal(tr, product.discount);
+    });
+  });
+
+  // Bind input change
+  tr.querySelector('.qty-input').addEventListener('input', function(){
+    let val = parseInt(this.value);
+    if(isNaN(val)||val<1) val=1;
+    this.value = val;
+    updateRowTotal(tr, product.discount);
+  });
+
+  updateInvoiceSummary();
+}
+
+// ====== Close Modal ======
+function closeBuyModal(){
+  document.getElementById('buyModal').style.display = 'none';
+}
+
+// ====== Confirm Purchase ======
+function buyNowConfirm(){
+  const u = auth.currentUser;
+  if(!u){ alert("Please login first!"); return; }
+
+  const phone = document.getElementById('buyPhone').value.trim();
+  const address = document.getElementById('buyAddress').value.trim();
+  if(!phone || !address){ alert("Please enter phone and address!"); return; }
+
+  const qty = parseInt(document.querySelector('.qty-input').value)||1;
+  const subtotal = currentBuyProduct.price * qty;
+  const discount = (currentBuyProduct.price * (currentBuyProduct.discount||0)/100) * qty;
+  const shippingUSD = SHIPPING_RIEL / EXCHANGE_RATE;
+  const total = subtotal - discount + shippingUSD;
+
+  // Decide Payment Method
+  let paymentMethod = "QR";
+  if(/ភ្នំពេញ/i.test(address)){
+    paymentMethod = prompt("Select payment method: (COD / QR)").toUpperCase()==="COD"?"COD":"QR";
+  }
+
+  // Save Order
+  const order = {
+    productName: currentBuyProduct.name,
+    qty,
+    price: currentBuyProduct.price,
+    discount: currentBuyProduct.discount||0,
+    subtotal,
+    discountAmount: discount,
+    shipping: shippingUSD,
+    total,
+    phone,
+    address,
+    paymentMethod,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  db.collection("orders").doc(u.uid).collection("orders").add(order)
+  .then(()=>{
+    alert("✅ Order placed successfully!");
+    closeBuyModal();
+  })
+  .catch(err=>alert(err.message));
+}
+
+
+productView.querySelector('.buy-btn').onclick = () => {
+  const user = auth.currentUser;
+  if(!user){
+    openAuth(); // បង្ហាញ auth modal
+
+    const unregisterListener = auth.onAuthStateChanged(u => {
+      if(u){
+        closeAuth(); // auto-close auth modal
+        showToast("✅ Login success, ready to buy");
+        openBuyModal(p); // បង្ហាញ buy modal
+        unregisterListener(); // remove listener
+      }
+    });
+    return;
+  }
+  openBuyModal(p); // ប្រសិន login ស្រាប់
+};
+
+
+function showToast(msg) {
+  const toast = document.createElement('div');
+  toast.textContent = msg;
+  toast.style.position = 'fixed';
+  toast.style.bottom = '20px';
+  toast.style.left = '50%';
+  toast.style.transform = 'translateX(-50%)';
+  toast.style.background = '#333';
+  toast.style.color = '#fff';
+  toast.style.padding = '10px 20px';
+  toast.style.borderRadius = '6px';
+  toast.style.fontSize = '15px';
+  toast.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
+  toast.style.opacity = '0';
+  toast.style.transition = 'opacity 0.4s';
+  document.body.appendChild(toast);
+  
+  setTimeout(() => toast.style.opacity = '1', 50);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    setTimeout(() => toast.remove(), 400);
+  }, 2000);
+}
+
+ 
+
+  function formatViews(v) {
+    if (v >= 1_000_000) return (v / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+    if (v >= 1_000) return (v / 1_000).toFixed(1).replace(/\.0$/, '') + 'k';
+    return v || 0;
+  }
+}
+
+function getDeviceId() {
+  let id = localStorage.getItem('device_id');
+  if (!id) {
+    id = 'dev-' + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem('device_id', id);
+  }
+  return id;
+}
+
+
+searchInput.addEventListener('input',()=>renderProducts(document.querySelector('.filter-bar button.active')?.textContent==='All'?'':document.querySelector('.filter-bar button.active')?.textContent));
+
+// === Init ===
+auth.onAuthStateChanged(updateProfileUI);
+loadProducts();
+updateCartCount();
+</script>
+</body>
+</html>
