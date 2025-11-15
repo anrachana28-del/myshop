@@ -476,7 +476,64 @@ header .logo{font-size:20px;font-weight:bold;cursor:pointer;}
   }
 }
 
+.option-buttons {
+  text-align: center;
+  margin-bottom: 20px;
+}
+.option-buttons button {
+  padding: 10px 20px;
+  margin: 0 10px;
+  cursor: pointer;
+  border-radius: 6px;
+  border: none;
+  background-color: #2196F3;
+  color: #fff;
+}
+.profile-card, .order-section {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  background-color: #fff;
+}
+.button-group {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+.button-group button {
+  flex: 1;
+  margin: 0 5px;
+  padding: 10px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+.confirm-btn { background-color: #4CAF50; color: #fff; }
+.logout-btn { background-color: #f44336; color: #fff; }
 
+.order-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  background-color: #cce5ff; /* initial blue */
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.order-row:hover {
+  background-color: #99ccff; /* hover blue */
+}
+
+.order-row.clicked {
+  background-color: #fff; /* normal after click */
+}
 </style>
 </head>
 <body>
@@ -517,7 +574,14 @@ header .logo{font-size:20px;font-weight:bold;cursor:pointer;}
 
 <!-- Customer Page -->
 <section id="customerPage">
-  <div class="profile-card">
+  <!-- Option Buttons -->
+  <div class="option-buttons">
+    <button onclick="showSection('profile')">Profile</button>
+    <button onclick="showSection('orders')">Order History</button>
+  </div>
+
+  <!-- Profile Section -->
+  <div class="profile-card" id="profileSection">
     <h3>Customer Profile</h3>
     <div class="profile-item" id="profileName"></div>
     <div class="profile-item" id="profileEmail"></div>
@@ -529,12 +593,68 @@ header .logo{font-size:20px;font-weight:bold;cursor:pointer;}
       <label>Address:</label>
       <textarea id="profileAddress" placeholder="Delivery Address"></textarea>
     </div>
-    <button class="confirm-btn" onclick="saveProfile()">Save Profile</button>
-    <button class="logout-btn" onclick="logoutUser()">Logout</button>
+    <div class="button-group">
+      <button class="confirm-btn" onclick="saveProfile()">Save Profile</button>
+      <button class="logout-btn" onclick="logoutUser()">Logout</button>
+    </div>
   </div>
-  <h3 style="text-align:center;">Order History</h3>
-  <div id="orderHistory"></div>
-  <button class="back-btn" onclick="goHome()">Back to Shop</button>
+
+<!-- Order History Section -->
+<!-- Order History Section -->
+<div id="orderHistory" class="order-section" style="display:none; padding:10px;">
+  <h3 style="text-align:center; font-size:18px; margin-bottom:10px;">Order History</h3>
+  <div id="orderList">
+    <!-- Orders will be rendered here -->
+  </div>
+</div>
+<!-- Modal -->
+<!-- ORDER MODAL -->
+<div id="orderModal" 
+     style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+     background:rgba(0,0,0,0.6); justify-content:center; align-items:center; z-index:1000;">
+
+  <div id="modalBox"
+       style="background:#fff; padding:15px; border-radius:12px; width:90%; 
+       max-width:480px; max-height:90%; overflow-y:auto;
+       position:relative; font-family:'Battambang', sans-serif;
+       border:2px solid #ddd; box-shadow:0 4px 15px rgba(0,0,0,0.3);">
+
+    <!-- Close button -->
+    <span id="closeBtn"
+          style="position:absolute; top:10px; right:15px; cursor:pointer; font-size:20px;"
+          onclick="closeModal()">✖</span>
+
+    <!-- Company Logo -->
+    <div style="text-align:center; margin-top:5px;">
+      <img src="your-logo.png" width="80" />
+    </div>
+
+    <!-- Watermark -->
+    <div style="text-align:center; opacity:0.2; font-size:22px; margin-top:5px;">
+      YOUR SHOP
+    </div>
+
+    <!-- Modal Content -->
+    <div id="modalContent" style="font-size:15px; margin-top:10px;"></div>
+
+    <!-- QR Code -->
+    <div style="text-align:center; margin-top:15px;">
+      <div id="qrcode"></div>
+    </div>
+
+    <!-- Download Button -->
+    <button id="downloadBtn"
+        onclick="downloadOrderImage()"
+        style="width:100%; padding:10px; background:#4CAF50; color:white;
+               border:none; border-radius:8px; font-size:16px; cursor:pointer; margin-top:15px;">
+      ⬇️ Download Image
+    </button>
+
+  </div>
+</div>
+
+
+
 </section>
 
 <!-- Auth Modal -->
@@ -589,24 +709,24 @@ header .logo{font-size:20px;font-weight:bold;cursor:pointer;}
       </thead>
       <tbody id="buyInvoiceBody"></tbody>
       <tfoot style="border-top:2px solid #ccc;">
-        <tr>
-          <td colspan="4" style="text-align:right;font-weight:bold;">តម្លៃដើម:</td>
-          <td id="buyInvoiceSubtotal" style="text-align:right;font-weight:bold;">$0.00</td>
-        </tr>
-        <tr>
-          <td colspan="4" style="text-align:right;font-weight:bold;">ចំនួនបញ្ចុះតម្លៃ:</td>
-          <td id="buyInvoiceDiscount" style="text-align:right;font-weight:bold;color:red;">-$0.00</td>
-          
-        </tr>
-        <tr>
-          <td colspan="4" style="text-align:right;font-weight:bold;">តម្លៃដឹកជញ្ជូន(8000៛):</td>
-          <td id="buyInvoiceShipping" style="text-align:right;font-weight:bold;">$0.00</td>
-        </tr>
-        <tr>
-          <td colspan="4" style="text-align:right;font-weight:bold;font-size:1.1em;">Total:</td>
-          <td id="buyInvoiceTotal" style="text-align:right;font-weight:bold;font-size:1.1em;color:#28a745;">$0.00</td>
-        </tr>
-      </tfoot>
+
+  <tr>
+    <td colspan="4" style="text-align:right;font-weight:bold;">ចំនួនបញ្ចុះតម្លៃ:</td>
+    <td id="buyInvoiceDiscount" style="text-align:right;font-weight:bold;color:red;">-$0.00</td>
+  </tr>
+  <tr>
+    <td colspan="4" style="text-align:right;font-weight:bold;">តម្លៃដឹកជញ្ជូន (8000៛ ≈ $2):</td>
+    <td id="buyInvoiceShipping" style="text-align:right;font-weight:bold;">$0.00</td>
+  </tr>
+  <tr>
+    <td colspan="4" style="text-align:right;font-weight:bold;font-size:1.1em;">Total:</td>
+    <td id="buyInvoiceTotal" style="text-align:right;font-weight:bold;font-size:1.1em;color:#28a745;">$0.00</td>
+  </tr>
+</tfoot>
+</table>
+
+
+
     </table>
 
     <!-- User Info -->
@@ -657,6 +777,7 @@ header .logo{font-size:20px;font-weight:bold;cursor:pointer;}
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <script>
 // === Firebase Config ===
@@ -731,7 +852,18 @@ function saveProfile(){
   const address=document.getElementById('profileAddress').value.trim();
   db.collection('users').doc(u.uid).update({phone,address}).then(()=>alert("✅ Profile updated!")).catch(e=>alert(e.message));
 }
+function showSection(section) {
+  const profile = document.getElementById('profileSection');
+  const orders = document.getElementById('orderHistory');
 
+  if(section === 'profile') {
+    profile.style.display = 'block';
+    orders.style.display = 'none';
+  } else {
+    profile.style.display = 'none';
+    orders.style.display = 'block';
+  }
+}
 // === Logout ===
 function logoutUser(){auth.signOut().then(()=>{goHome();});}
 
@@ -745,43 +877,354 @@ function updateCartCount(){cartCount.textContent=getCart().reduce((s,i)=>s+i.qty
 function openCart(){const u=auth.currentUser; if(!u){alert("Please login first!");openAuth();return;} renderCart();cartModal.style.display='flex';}
 function closeCart(){cartModal.style.display='none';}
 function renderCart(){const c=getCart();cartItems.innerHTML='';let total=0;c.forEach(i=>{total+=i.price*i.qty;const div=document.createElement('div');div.className='cart-item';div.innerHTML=`<img src="${i.image}"><div>${i.name}</div><input type="number" value="${i.qty}" min="1"><div>$${(i.price*i.qty).toFixed(2)}</div>`;div.querySelector('input').addEventListener('change',()=>{i.qty=Number(div.querySelector('input').value);setCart(c);renderCart();});cartItems.appendChild(div);});document.getElementById('cartTotal').textContent="Total: $"+total.toFixed(2);}
+async function sendOrderToTelegram(order) {
+  const botToken = "7654128263:AAG7Bfl_kPF9aOnE0hltHpCGqQlTE1H9wCg";
+  const chatId = "6567570219";
+
+  // Prepare items text
+  const itemsText = order.products.map((p, i) => {
+    const name = p.name.padEnd(25, " "); // product name fixed width
+    const qty = String(p.qty).padStart(2, " "); // right-align qty
+    const total = (p.price * p.qty).toFixed(2).padStart(7, " "); // right-align subtotal
+    const rowEmoji = i % 2 === 0 ? "▫️" : "▪️"; // alternate row highlight
+    return `${rowEmoji} ${name} : ${qty} : $${total} ${rowEmoji}`;
+  }).join("\n");
+
+  // Construct full message
+  const text = `
+🧾 <b>ORDER INVOICE</b>
+━━━━━━━━━━━━━━━━━━━━━━
+👤 <b>Customer:</b> ${order.customer.name}
+📞 <b>Phone:</b> ${order.customer.phone}
+🏠 <b>Address:</b> ${order.customer.address}
+📧 <b>Email:</b> ${order.customer.email || "N/A"}
+🆔 <b>Order Code:</b> ${order.orderCode || "N/A"}
+────────────────────────────────────
+<b>🛒 Items:</b>
+<pre>
+${itemsText}
+─────────────────────────────────────
+💰 <b>TOTAL: $${order.total.toFixed(2).padStart(7, " ")}</b>
+━━━━━━━━━━━━━━━━━━━━━━
+⏱  ${new Date().toLocaleString()}
+</pre>
+`;
+
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: text,
+        parse_mode: "HTML"
+      })
+    });
+
+    const data = await res.json();
+    if (!data.ok) {
+      console.error(data);
+      alert("Telegram Send Error: " + data.description);
+    }
+  } catch (err) {
+    alert("Telegram Error: " + err.message);
+  }
+}
+
+
+function escapeMarkdown(text) {
+  if (!text) return "";
+
+  return text
+    .toString()
+    .replace(/\\/g, '\\\\')      // escape backslashes first
+    .replace(/_/g, '\\_')
+    .replace(/\*/g, '\\*')
+    .replace(/\[/g, '\\[')
+    .replace(/\]/g, '\\]')
+    .replace(/\(/g, '\\(')
+    .replace(/\)/g, '\\)')
+    .replace(/~/g, '\\~')
+    .replace(/`/g, '\\`')
+    .replace(/>/g, '\\>')
+    .replace(/#/g, '\\#')
+    .replace(/\+/g, '\\+')
+    .replace(/-/g, '\\-')        // <—— ESCAPE HYPHEN FIX!
+    .replace(/=/g, '\\=')
+    .replace(/\|/g, '\\|')
+    .replace(/{/g, '\\{')
+    .replace(/}/g, '\\}')
+    .replace(/\./g, '\\.')
+    .replace(/!/g, '\\!');
+}
+
+
+
 
 // === Checkout ===
-function openCheckout(){
-  const u=auth.currentUser; if(!u){alert("Please login first!"); openAuth(); return;}
-  closeCart(); mainPage.style.display='none'; checkoutPage.style.display='block';
-  const cart=getCart(); const div=document.getElementById('checkoutItems'); div.innerHTML=''; let total=0;
-  cart.forEach(i=>{total+=i.price*i.qty; div.innerHTML+=`<div class='checkout-item'><span>${i.name} x${i.qty}</span><span>$${(i.price*i.qty).toFixed(2)}</span></div>`;});
-  document.getElementById('checkoutTotal').textContent="Total: $"+total.toFixed(2);
-  db.collection('users').doc(u.uid).get().then(doc=>{const data=doc.data()||{}; document.getElementById('checkoutPhone').value=data.phone||''; document.getElementById('checkoutAddress').value=data.address||'';});
-}
-function confirmCheckout(){
-  const u=auth.currentUser; if(!u) return alert("Please login first!");
-  const cart=getCart(); if(cart.length===0) return alert("Cart is empty!");
-  const phone=document.getElementById('checkoutPhone').value.trim();
-  const address=document.getElementById('checkoutAddress').value.trim();
-  if(!phone||!address) return alert("Please enter phone and delivery address!");
-  db.collection('users').doc(u.uid).get().then(userDoc=>{
-    const userData=userDoc.data()||{};
-    const order={customer:{uid:u.uid,name:userData.name||u.displayName||"Unknown",email:u.email||userData.email||"",phone,address},products:cart,total:cart.reduce((s,i)=>s+i.price*i.qty,0),createdAt:firebase.firestore.FieldValue.serverTimestamp()};
-    db.collection('orders').doc(u.uid).collection('orders').doc().set(order).then(()=>{alert("✅ Purchase Confirmed!"); setCart([]); goHome();}).catch(e=>alert(e.message));
+function openCheckout() {
+  const u = auth.currentUser;
+  if (!u) { alert("Please login first!"); openAuth(); return; }
+
+  closeCart();
+  mainPage.style.display = 'none';
+  checkoutPage.style.display = 'block';
+
+  const cart = getCart();
+  const div = document.getElementById('checkoutItems');
+  div.innerHTML = '';
+
+  let total = 0;
+  cart.forEach(i => {
+    total += i.price * i.qty;
+    div.innerHTML += `
+      <div class='checkout-item'>
+        <span>${i.name} x${i.qty}</span>
+        <span>$${(i.price * i.qty).toFixed(2)}</span>
+      </div>`;
   });
+
+  document.getElementById('checkoutTotal').textContent = "Total: $" + total.toFixed(2);
+
+  // Load saved phone/address
+  db.collection('users').doc(u.uid).get().then(doc => {
+    const data = doc.data() || {};
+    document.getElementById('checkoutPhone').value = data.phone || '';
+    document.getElementById('checkoutAddress').value = data.address || '';
+  });
+}
+
+
+async function confirmCheckout() {
+  const u = auth.currentUser;
+  if (!u) return alert("Please login first!");
+
+  const cart = getCart();
+  if (cart.length === 0) return alert("Cart is empty!");
+
+  const phone = document.getElementById('checkoutPhone').value.trim();
+  const address = document.getElementById('checkoutAddress').value.trim();
+  if (!phone || !address)
+    return alert("Please enter phone and delivery address!");
+
+  // 🔹 Get last order number globally
+  const orderCounterRef = db.collection('counters').doc('orderNumber');
+  let nextOrderNumber = 1;
+
+  await db.runTransaction(async (tx) => {
+    const doc = await tx.get(orderCounterRef);
+    if (!doc.exists) {
+      tx.set(orderCounterRef, { last: 1 });
+    } else {
+      nextOrderNumber = doc.data().last + 1;
+      tx.update(orderCounterRef, { last: nextOrderNumber });
+    }
+  });
+
+  const orderCode = 'OD ' + String(nextOrderNumber).padStart(5, '0');
+
+  const userDoc = await db.collection('users').doc(u.uid).get();
+  const userData = userDoc.data() || {};
+
+  const order = {
+    orderCode,
+    orderNumber: nextOrderNumber,
+    customer: {
+      uid: u.uid,
+      name: userData.name || u.displayName || "Unknown",
+      email: u.email || "",
+      phone,
+      address
+    },
+    products: cart,
+    total: cart.reduce((s, i) => s + i.price * i.qty, 0),
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  // Save order under user
+  await db.collection('orders').doc(u.uid).collection('orders').add(order);
+
+  // Send Telegram notification
+  await sendOrderToTelegram(order);
+
+  alert(`✅ Purchase Confirmed!\nOrder Code: ${orderCode}`);
+  setCart([]);
+  goHome();
 }
 function goBack(){checkoutPage.style.display='none'; mainPage.style.display='block'; updateCartCount();}
 
-// === Load Order History ===
-function loadOrderHistory(uid){
-  orderHistory.innerHTML='Loading...';
-  db.collection('orders').doc(uid).collection('orders').orderBy('createdAt','desc').get().then(snap=>{
-    orderHistory.innerHTML=''; if(snap.empty){orderHistory.textContent="No orders yet.";}
-    snap.forEach(doc=>{const o=doc.data(); const div=document.createElement('div');div.className='order-card';
-      o.products.forEach(p=>{div.innerHTML+=`<div class='order-item'><span>${p.name} x${p.qty}</span><span>$${(p.price*p.qty).toFixed(2)}</span></div>`;});
-      div.innerHTML+=`<div class='order-total'>Total: $${o.total.toFixed(2)}</div>`;
-      div.innerHTML+=`<div style='font-size:12px;color:#555;text-align:right;'>${o.createdAt.toDate().toLocaleString()}</div>`;
-      orderHistory.appendChild(div);
+// Load order history for mobile-friendly UI
+async function loadOrderHistory(uid) {
+  const container = document.getElementById('orderList');
+  container.innerHTML = 'Loading...';
+
+  // Load clicked orders from localStorage
+  const clickedOrders = JSON.parse(localStorage.getItem('clickedOrders') || '[]');
+
+  try {
+    const snap = await db.collection('orders').doc(uid).collection('orders')
+      .orderBy('createdAt','desc').get();
+
+    container.innerHTML = '';
+    if (snap.empty) {
+      container.innerHTML = '<p style="text-align:center; color:#777;">No orders yet.</p>';
+      return;
+    }
+
+    let index = 1;
+    const now = new Date();
+
+    snap.forEach((doc, i) => {
+      const o = doc.data();
+      const orderDate = o.createdAt ? o.createdAt.toDate() : null;
+      const dateStr = orderDate ? orderDate.toLocaleString() : '';
+
+      const div = document.createElement('div');
+      div.className = 'order-row';
+
+      // ✅ Set text color
+      if (clickedOrders.includes(o.orderCode)) {
+        div.style.color = '#B3AFAF'; // clicked → red
+      } else {
+        div.style.color = 'blue'; // before click → blue
+      }
+
+      // ✅ Determine background
+      let bgColor;
+      if (clickedOrders.includes(o.orderCode)) {
+        bgColor = '#fff'; // clicked → white
+      } else if (i === 0) {
+        bgColor = '#ffcccc'; // latest
+      } else if (orderDate && (now - orderDate) < 24*60*60*1000) {
+        bgColor = '#fff2cc'; // recent
+      } else {
+        bgColor = (i % 2 === 0) ? '#f9f9f9' : '#fff'; // older
+      }
+      div.dataset.defaultBg = bgColor;
+      div.style.background = bgColor;
+
+      // Style
+      div.style.border = '1px solid #ddd';
+      div.style.borderRadius = '8px';
+      div.style.padding = '10px';
+      div.style.marginBottom = '8px';
+      div.style.display = 'flex';
+      div.style.justifyContent = 'space-between';
+      div.style.alignItems = 'center';
+      div.style.flexWrap = 'wrap';
+      div.style.cursor = 'pointer';
+      div.style.transition = 'background 0.2s, color 0.2s';
+
+      // Content
+      div.innerHTML = `
+        <div style="flex:1; min-width:30px; font-weight:bold;">${index}</div>
+        <div style="flex:3; min-width:100px; font-weight:bold;">${o.orderCode || ''}</div>
+        <div style="flex:3; min-width:100px;">${dateStr}</div>
+      `;
+
+      // Hover effect
+      div.addEventListener('mouseenter', () => {
+        div.style.background = '#e6f7ff';
+      });
+      div.addEventListener('mouseleave', () => {
+        div.style.background = div.dataset.defaultBg;
+        // preserve text color if clicked
+        if (clickedOrders.includes(o.orderCode)) {
+          div.style.color = '#A3A09E';
+        } else {
+          div.style.color = 'blue';
+        }
+      });
+
+      // Click → mark as clicked
+      div.addEventListener('click', () => {
+        div.dataset.defaultBg = '#fff';
+        div.style.background = '#fff';
+        div.style.color = '#A3A09E'; // change text to red
+
+        if (!clickedOrders.includes(o.orderCode)) {
+          clickedOrders.push(o.orderCode);
+          localStorage.setItem('clickedOrders', JSON.stringify(clickedOrders));
+        }
+
+        showOrderModal(o);
+      });
+
+      container.appendChild(div);
+      index++;
     });
+
+  } catch(err) {
+    container.innerHTML = `<p style="color:red;">Error: ${err.message}</p>`;
+    console.error(err);
+  }
+}
+
+// Save clicked order
+function markOrderClicked(orderId) {
+  let clicked = JSON.parse(localStorage.getItem('clickedOrders') || '[]');
+  if (!clicked.includes(orderId)) clicked.push(orderId);
+  localStorage.setItem('clickedOrders', JSON.stringify(clicked));
+}
+
+// Check if clicked
+function isOrderClicked(orderId) {
+  const clicked = JSON.parse(localStorage.getItem('clickedOrders') || '[]');
+  return clicked.includes(orderId);
+}
+
+// Show modal with full order info
+function showOrderModal(order) {
+  const modal = document.getElementById('orderModal');
+  const content = document.getElementById('modalContent');
+
+  content.innerHTML = `
+    <h3 style="margin-bottom:5px;">Order ${order.orderCode || ''}</h3>
+    <p><b>Customer:</b> ${order.customer.name}</p>
+    <p><b>Phone:</b> ${order.customer.phone}</p>
+    <p><b>Address:</b> ${order.customer.address}</p>
+    <p><b>Email:</b> ${order.customer.email || 'N/A'}</p>
+    <hr>
+    <h4>Items:</h4>
+    <div>
+      ${order.products.map(p => {
+        const price = Number(p.price) || 0;
+        const qty = Number(p.qty) || 0;
+        const subtotal = price * qty;
+        return `
+        <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid #eee;">
+          <div style="flex:2;">${p.name}</div>
+          <div style="flex:1; text-align:center;">${qty}</div>
+          <div style="flex:1; text-align:right;">$${price.toFixed(2)}</div>
+          <div style="flex:1; text-align:right;">$${subtotal.toFixed(2)}</div>
+        </div>
+        `;
+      }).join('')}
+    </div>
+    <hr>
+    <p style="text-align:right; font-weight:bold; font-size:16px;">Total: $${Number(order.total || 0).toFixed(2)}</p>
+    <p style="text-align:right; font-size:12px; color:#555;">${order.createdAt ? order.createdAt.toDate().toLocaleString() : ''}</p>
+  `;
+  modal.style.display = 'flex';
+}
+function downloadOrderImage() {
+  const modalBox = document.querySelector('#orderModal > div'); // box inside modal
+
+  html2canvas(modalBox, { scale: 2 }).then(canvas => {
+    const link = document.createElement('a');
+    link.download = 'MYSHOP_COFFE';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
   });
 }
+
+function closeModal() {
+  document.getElementById('orderModal').style.display = 'none';
+}
+
+// Example: show section and load orders
+document.getElementById('orderHistory').style.display = 'block';
+loadOrderHistory('USER_UID_HERE');
 
 // === Products ===
 let products=[];
@@ -1049,51 +1492,11 @@ async function showProductView(p) {
 
 
 
+const SHIPPING_RIEL = 8000; // ថ្លៃដឹកជញ្ជូន
+const EXCHANGE_RATE = 4000; // 1 USD = 4000៛
 let currentBuyProduct = null;
-const SHIPPING_RIEL = 8000;
-const EXCHANGE_RATE = 4000; // 1$ = 4000៛
 
-// ====== Update Row Total ======
-function updateRowTotal(row, discount){
-  const input = row.querySelector('.qty-input');
-  const qty = parseInt(input.value) || 1;
-  const priceCell = row.children[3];
-  const totalCell = row.querySelector('.row-total');
-
-  const priceText = priceCell.textContent.replace('$','');
-  const price = parseFloat(priceText);
-  const total = price * qty;
-
-  totalCell.textContent = `$${total.toFixed(2)}`;
-  updateInvoiceSummary();
-}
-
-// ====== Update Summary ======
-function updateInvoiceSummary(){
-  const rows = document.querySelectorAll('#buyInvoiceBody tr');
-  let subtotal = 0;
-  let discount = 0;
-
-  rows.forEach(row=>{
-    const qty = parseInt(row.querySelector('.qty-input').value)||1;
-    const productName = currentBuyProduct.name;
-    const priceBefore = currentBuyProduct.price;
-    const dis = currentBuyProduct.discount||0;
-    const priceAfter = priceBefore * (1 - dis/100);
-    subtotal += priceBefore * qty;
-    discount += (priceBefore - priceAfter) * qty;
-  });
-
-  const shippingUSD = SHIPPING_RIEL / EXCHANGE_RATE;
-  const total = subtotal - discount + shippingUSD;
-
-  document.getElementById('buyInvoiceSubtotal').textContent = `$${subtotal.toFixed(2)}`;
-  document.getElementById('buyInvoiceDiscount').textContent = `-$${discount.toFixed(2)}`;
-  document.getElementById('buyInvoiceShipping').textContent = `$${shippingUSD.toFixed(2)}`;
-  document.getElementById('buyInvoiceTotal').textContent = `$${total.toFixed(2)}`;
-}
-
-// ====== Open Modal ======
+// Open Buy Modal
 function openBuyModal(product){
   const u = auth.currentUser;
   if(!u){ 
@@ -1105,26 +1508,36 @@ function openBuyModal(product){
   currentBuyProduct = product;
   const buyModal = document.getElementById('buyModal');
   buyModal.style.display = 'block';
-  document.getElementById('buyProductName').textContent = product.price;
+  document.getElementById('buyProductName').textContent = product.name;
 
   const tbody = document.getElementById('buyInvoiceBody');
   tbody.innerHTML = '';
 
   const tr = document.createElement('tr');
-  const priceAfterDiscount = product.price * (1 - (product.discount||0)/100);
+  const price = product.price;
+  const discountPercent = product.discount || 0;
+  const priceAfterDiscount = price * (1 - discountPercent/100);
 
   tr.innerHTML = `
     <td><img src="${Array.isArray(product.imageURL)?product.imageURL[0]:product.imageURL||''}" style="width:50px;border-radius:6px;"></td>
-    <td>${product.name}${product.discount ? ` <small style="color:red">(${product.discount}% OFF)</small>` : ''}</td>
+    <td>${product.name}${discountPercent ? ` <small style="color:red">(${discountPercent}% OFF)</small>` : ''}</td>
     <td style="text-align:center">
       <button class="qty-btn" data-delta="-1">-</button>
-      <input type="number" class="qty-input" value="${product.qty || 1}" min="1" style="width:40px;text-align:center;">
+      <input type="number" class="qty-input" value="1" min="1" style="width:40px;text-align:center;">
       <button class="qty-btn" data-delta="1">+</button>
     </td>
-    <td style="text-align:right">$${currentBuyProduct.price .toFixed(2)}</td>
-    <td class="row-total" style="text-align:right">$${currentBuyProduct.price .toFixed(2)}</td>
+    <td class="row-price" style="text-align:right">$${price.toFixed(2)}</td>
+    <td class="row-total" style="text-align:right">$${price.toFixed(2)}</td>
   `;
   tbody.appendChild(tr);
+
+  // ===== Shipping Option =====
+  const paymentDiv = document.getElementById('paymentOption');
+  paymentDiv.innerHTML = `
+    <label><input type="radio" name="shippingOption" value="no" checked> មិនដឹក (Pickup)</label>
+    &nbsp;&nbsp;
+    <label><input type="radio" name="shippingOption" value="yes"> ដឹក (Shipping)</label>
+  `;
 
   // Bind Qty buttons
   tr.querySelectorAll('.qty-btn').forEach(btn=>{
@@ -1135,27 +1548,60 @@ function openBuyModal(product){
       val += delta;
       if(val < 1) val = 1;
       input.value = val;
-      updateRowTotal(tr, product.discount);
+      updateRowTotal(tr, discountPercent);
+      updateInvoiceSummary();
     });
   });
 
   // Bind input change
   tr.querySelector('.qty-input').addEventListener('input', function(){
     let val = parseInt(this.value);
-    if(isNaN(val)||val<1) val=1;
+    if(isNaN(val) || val<1) val=1;
     this.value = val;
-    updateRowTotal(tr, product.discount);
+    updateRowTotal(tr, discountPercent);
+    updateInvoiceSummary();
+  });
+
+  // Bind shipping change
+  document.querySelectorAll('input[name="shippingOption"]').forEach(r=>{
+    r.addEventListener('change', updateInvoiceSummary);
   });
 
   updateInvoiceSummary();
 }
 
-// ====== Close Modal ======
+// Update Row Total
+function updateRowTotal(tr, discountPercent){
+  const qty = parseInt(tr.querySelector('.qty-input').value)||1;
+  const price = parseFloat(tr.querySelector('.row-price').textContent.replace('$',''));
+  const total = price * (1 - discountPercent/100) * qty;
+  tr.querySelector('.row-total').textContent = `$${total.toFixed(2)}`;
+}
+
+// Update Invoice Summary
+function updateInvoiceSummary(){
+  const tr = document.querySelector('#buyInvoiceBody tr');
+  const qty = parseInt(tr.querySelector('.qty-input').value)||1;
+  const price = parseFloat(tr.querySelector('.row-price').textContent.replace('$',''));
+  const discountPercent = currentBuyProduct.discount||0;
+
+  const subtotal = price * qty;
+  const discountAmount = subtotal * discountPercent/100;
+
+  const shipping = document.querySelector('input[name="shippingOption"]:checked')?.value === 'yes' ? SHIPPING_RIEL/EXCHANGE_RATE : 0;
+  const total = subtotal - discountAmount + shipping;
+
+  document.getElementById('buyInvoiceDiscount').textContent = `-$${discountAmount.toFixed(2)} (${(discountAmount*EXCHANGE_RATE).toLocaleString()}៛)`;
+  document.getElementById('buyInvoiceShipping').textContent = `$${shipping.toFixed(2)} (${(shipping*EXCHANGE_RATE).toLocaleString()}៛)`;
+  document.getElementById('buyInvoiceTotal').textContent = `$${total.toFixed(2)} (${(total*EXCHANGE_RATE).toLocaleString()}៛)`;
+}
+
+// Close Modal
 function closeBuyModal(){
   document.getElementById('buyModal').style.display = 'none';
 }
 
-// ====== Confirm Purchase ======
+// Confirm Purchase
 function buyNowConfirm(){
   const u = auth.currentUser;
   if(!u){ alert("Please login first!"); return; }
@@ -1165,10 +1611,11 @@ function buyNowConfirm(){
   if(!phone || !address){ alert("Please enter phone and address!"); return; }
 
   const qty = parseInt(document.querySelector('.qty-input').value)||1;
-  const subtotal = currentBuyProduct.price * qty;
-  const discount = (currentBuyProduct.price * (currentBuyProduct.discount||0)/100) * qty;
-  const shippingUSD = SHIPPING_RIEL / EXCHANGE_RATE;
-  const total = subtotal - discount + shippingUSD;
+  const price = currentBuyProduct.price;
+  const discountAmount = price * (currentBuyProduct.discount||0)/100 * qty;
+  const shipping = document.querySelector('input[name="shippingOption"]:checked')?.value === 'yes' ? SHIPPING_RIEL/EXCHANGE_RATE : 0;
+  const subtotal = price * qty;
+  const total = subtotal - discountAmount + shipping;
 
   // Decide Payment Method
   let paymentMethod = "QR";
@@ -1180,11 +1627,11 @@ function buyNowConfirm(){
   const order = {
     productName: currentBuyProduct.name,
     qty,
-    price: currentBuyProduct.price,
-    discount: currentBuyProduct.discount||0,
+    price,
+    discountPercent: currentBuyProduct.discount||0,
+    discountAmount,
     subtotal,
-    discountAmount: discount,
-    shipping: shippingUSD,
+    shipping,
     total,
     phone,
     address,
@@ -1199,6 +1646,7 @@ function buyNowConfirm(){
   })
   .catch(err=>alert(err.message));
 }
+
 
 
 productView.querySelector('.buy-btn').onclick = () => {
